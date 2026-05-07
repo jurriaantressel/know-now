@@ -10,6 +10,7 @@ mod launch_token;
 mod routes;
 mod security;
 mod session;
+mod static_dashboard;
 
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
@@ -126,6 +127,7 @@ fn build_app(state: AppState, addr: SocketAddr) -> Router {
 
     routes::router(state.clone())
         .merge(api::router())
+        .merge(static_dashboard::router())
         .layer(security::cors_layer(&origin))
         .layer(security::x_content_type_options())
         .layer(security::x_frame_options())
