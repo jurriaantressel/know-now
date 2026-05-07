@@ -966,7 +966,17 @@ code {
 .kn-docs__rendered h2 { font-size: 1.25rem; margin: 1.25rem 0 0.5rem; }
 .kn-docs__rendered h3 { font-size: 1.1rem; margin: 1rem 0 0.5rem; }
 .kn-docs__rendered p { margin: 0.5rem 0; }
-.kn-docs__rendered ul { padding-left: 1.5rem; }
+.kn-docs__rendered ul,
+.kn-docs__rendered ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+.kn-docs__rendered li { margin: 0.15rem 0; }
+.kn-docs__rendered a { color: var(--kn-color-accent, #3a6df0); }
+.kn-docs__rendered code {
+  font-family: var(--kn-font-mono, monospace);
+  background: var(--kn-bg-subtle, rgba(0, 0, 0, 0.05));
+  padding: 0.1em 0.35em;
+  border-radius: var(--kn-radius-1);
+  font-size: 0.9em;
+}
 .kn-docs__rendered pre {
   background: var(--kn-bg);
   border: 1px solid var(--kn-border);
@@ -974,6 +984,34 @@ code {
   padding: 0.75rem;
   overflow-x: auto;
   font-size: 0.85rem;
+}
+.kn-docs__rendered pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+.kn-docs__rendered table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  font-size: 0.9em;
+}
+.kn-docs__rendered th,
+.kn-docs__rendered td {
+  border: 1px solid var(--kn-border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.kn-docs__rendered th {
+  background: var(--kn-bg-subtle, rgba(0, 0, 0, 0.04));
+  font-weight: 600;
+}
+.kn-docs__rendered blockquote {
+  border-left: 3px solid var(--kn-border);
+  margin: 0.5rem 0;
+  padding: 0 0.75rem;
+  color: var(--kn-text-muted);
 }
 
 .kn-docs__svg svg {
