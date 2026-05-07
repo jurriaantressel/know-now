@@ -423,6 +423,74 @@ async fn launch_info_token_round_trips_through_open() {
     handle.shutdown();
 }
 
+// ─── Structured metadata-error responses ─────────────────────────────────────
+
+#[tokio::test]
+async fn metadata_parse_error_returns_422_with_structured_body() {
+    let dir = tempfile::tempdir().unwrap();
+    let meta = dir.path().join("metadata");
+    std::fs::create_dir(&meta).unwrap();
+    // Trigger META-PAR-DESER: `not_a_real_field` is unknown on the project schema.
+    std::fs::write(
+        meta.join("project.yml"),
+        r#"version: "1.0"
+project:
+  name: bad
+  owner: x
+  not_a_real_field: oops
+"#,
+    )
+    .unwrap();
+
+    let handle = start_server(project_config(dir.path().to_path_buf()))
+        .await
+        .unwrap();
+    let client = authenticated_client(&handle).await;
+
+    let resp = client
+        .get(format!("{}/api/v1/entities", handle.url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 422);
+
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body["kind"], "metadata_error");
+    assert!(body["summary"].as_str().unwrap().contains("parse error"));
+    let errors = body["errors"].as_array().unwrap();
+    assert!(!errors.is_empty(), "expected at least one error entry");
+    let first = &errors[0];
+    assert_eq!(first["code"], "META-PAR-DESER");
+    assert!(first["file"].as_str().unwrap().ends_with("project.yml"));
+    assert!(first["message"].as_str().unwrap().contains("not_a_real_field"));
+
+    handle.shutdown();
+}
+
+#[tokio::test]
+async fn missing_metadata_dir_returns_422() {
+    let dir = tempfile::tempdir().unwrap();
+    let handle = start_server(project_config(dir.path().to_path_buf()))
+        .await
+        .unwrap();
+    let client = authenticated_client(&handle).await;
+
+    let resp = client
+        .get(format!("{}/api/v1/entities", handle.url))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 422);
+    let body: serde_json::Value = resp.json().await.unwrap();
+    assert_eq!(body["kind"], "metadata_error");
+    assert!(body["summary"]
+        .as_str()
+        .unwrap()
+        .contains("no metadata/ directory"));
+
+    handle.shutdown();
+}
+
 #[tokio::test]
 async fn api_endpoints_require_session() {
     let project = create_test_project();

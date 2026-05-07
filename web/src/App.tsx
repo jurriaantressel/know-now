@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Entity, GraphResponse, RelationshipsResponse } from "./api/client";
-import { KnowNowClient } from "./api/client";
+import type {
+  Entity,
+  GraphResponse,
+  ProjectResponse,
+  RelationshipsResponse,
+} from "./api/client";
+import { ApiError, KnowNowClient } from "./api/client";
 import { useApi } from "./hooks/useApi";
 import { ArtifactTraceability } from "./components/ArtifactTraceability";
 import { DocsViewer } from "./components/DocsViewer";
@@ -9,6 +14,7 @@ import { EntityList } from "./components/EntityList";
 import { GenerationStatus } from "./components/GenerationStatus";
 import { HealthAdmin } from "./components/HealthAdmin";
 import { ManifestViewer } from "./components/ManifestViewer";
+import { MetadataErrorView } from "./components/MetadataErrorView";
 import { RelationshipGraph } from "./components/RelationshipGraph";
 import { RelationshipTable } from "./components/RelationshipTable";
 import { ReviewSummary } from "./components/ReviewSummary";
@@ -24,11 +30,17 @@ export function App() {
   const [graphMode, setGraphMode] = useState<GraphMode>("visual");
   const [navOpen, setNavOpen] = useState(false);
 
+  const fetchProject = useCallback((c: KnowNowClient) => c.getProject(), []);
   const fetchGraph = useCallback((c: KnowNowClient) => c.getGraph(), []);
   const fetchRelationships = useCallback((c: KnowNowClient) => c.getRelationships(), []);
 
+  const { error: projectError, reload: reloadProject } =
+    useApi<ProjectResponse>(fetchProject);
   const { data: graphData } = useApi<GraphResponse>(fetchGraph);
   const { data: relData } = useApi<RelationshipsResponse>(fetchRelationships);
+
+  const metadataError =
+    projectError instanceof ApiError ? projectError.metadataError : undefined;
 
   useEffect(() => {
     mainRef.current?.focus();
@@ -67,6 +79,17 @@ export function App() {
       </label>
     </fieldset>
   ) : null;
+
+  if (metadataError) {
+    return (
+      <div className="kn-app kn-app--error">
+        <a href="#main-content" className="kn-skip-link">Skip to main content</a>
+        <main className="kn-main" ref={mainRef} tabIndex={-1} id="main-content">
+          <MetadataErrorView error={metadataError} onRetry={reloadProject} />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="kn-app">
